@@ -2,6 +2,11 @@
 name = "cloudflare-calls-rs"
 version = "0.1.0"
 edition = "2021"
+license = "MIT"
+description = "Rust wrapper for the cloudflare calls api"
+homepage = "https://github.com/LudeeD/cloudflare-calls-rs"
+repository = "https://github.com/LudeeD/cloudflare-calls-rs"
+readme = "README.md"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
