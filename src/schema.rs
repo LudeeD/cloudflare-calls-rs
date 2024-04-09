@@ -1,25 +1,29 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub enum SdpType {
+    #[serde(rename = "offer")]
     Offer,
+    #[serde(rename = "answer")]
     Answer,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct SessionDescription {
     #[serde(rename = "type")]
     pub sdp_type: SdpType,
     pub sdp: String,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub enum TrackLocation {
+    #[serde(rename = "local")]
     Local,
+    #[serde(rename = "remote")]
     Remote,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct TrackObject {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub location: Option<TrackLocation>,

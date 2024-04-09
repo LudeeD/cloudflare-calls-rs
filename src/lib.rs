@@ -1,8 +1,8 @@
 use anyhow::Result;
 use reqwest::{Method, Response};
 use schema::{
-    NewSessionRequest, NewSessionResponse, SessionDescription, TrackObject, TracksRequest,
-    TracksResponse,
+    NewSessionRequest, NewSessionResponse, SessionDescription, SessionState, TrackObject,
+    TracksRequest, TracksResponse,
 };
 use serde::Serialize;
 
@@ -53,13 +53,20 @@ impl CallsApp {
             .map_err(|e| e.into())
     }
 
-    pub async fn new_session(&self, offer_sdp: &str) -> Result<NewSessionResponse> {
+    pub async fn new_session(
+        &self,
+        new_session: &SessionDescription,
+    ) -> Result<NewSessionResponse> {
         let url = "sessions/new".to_string();
+
+        if new_session.sdp_type != schema::SdpType::Offer {
+            return Err(anyhow::anyhow!(
+                "Session description must be of type offer, when creating session"
+            ));
+        }
+
         let body = NewSessionRequest {
-            session_description: SessionDescription {
-                sdp_type: schema::SdpType::Offer,
-                sdp: offer_sdp.to_string(),
-            },
+            session_description: new_session.clone(),
         };
 
         let response = self.build_request(&url, &body, Method::POST).await?;
@@ -110,14 +117,14 @@ impl CallsApp {
             .map_err(|e| e.into())
     }
 
-    pub async fn renegotiate(&self, session_id: &str, answer_sdp: &str) -> Result<()> {
+    pub async fn renegotiate(
+        &self,
+        session_id: &str,
+        session_description: SessionDescription,
+    ) -> Result<()> {
         let url = format!("sessions/{}/renegotiate", session_id);
-        let body = TracksRequest {
-            session_description: Some(SessionDescription {
-                sdp_type: schema::SdpType::Answer,
-                sdp: answer_sdp.to_string(),
-            }),
-            tracks: vec![],
+        let body = NewSessionRequest {
+            session_description,
         };
 
         let response = self.build_request(&url, &body, Method::PUT).await?;
@@ -128,6 +135,19 @@ impl CallsApp {
         }
 
         Ok(())
+    }
+
+    pub async fn get_session_state(&self, session_id: &str) -> Result<SessionState> {
+        let url = format!("sessions/{}", session_id);
+
+        let response = self.build_request(&url, &(), Method::GET).await?;
+
+        if !response.status().is_success() {
+            let text = response.text().await?;
+            return Err(anyhow::anyhow!(text));
+        }
+
+        response.json::<SessionState>().await.map_err(|e| e.into())
     }
 }
 
