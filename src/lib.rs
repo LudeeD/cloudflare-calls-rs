@@ -41,9 +41,6 @@ impl CallsApp {
     ) -> Result<Response> {
         let url = format!("{}/{}", self.base_path, path);
 
-        let string_body = serde_json::to_string(body).unwrap();
-        println!("string_body: {}", string_body);
-
         self.client
             .request(method, &url)
             .bearer_auth(&self.app_secret)
