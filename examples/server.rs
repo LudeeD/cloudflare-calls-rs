@@ -17,4 +17,6 @@ async fn main() {
         .new_session(&remote_session_description)
         .await
         .expect("Failed to make request to Cloudflare Calls API");
+
+    println!("Session created: {:?}", new_session_response.session_id);
 }
