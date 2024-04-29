@@ -146,6 +146,41 @@ impl CallsApp {
 
         response.json::<SessionState>().await.map_err(|e| e.into())
     }
+
+    pub async fn close_tracks(
+        &self,
+        session_id: &str,
+        track_objects: Vec<TrackObject>,
+        sdp: Option<String>,
+    ) -> Result<TracksResponse> {
+        let url = format!("sessions/{}/tracks/close", session_id);
+
+        let body = match sdp {
+            Some(sdp) => TracksRequest {
+                session_description: Some(SessionDescription {
+                    sdp_type: schema::SdpType::Offer,
+                    sdp,
+                }),
+                tracks: track_objects,
+            },
+            None => TracksRequest {
+                session_description: None,
+                tracks: track_objects,
+            },
+        };
+
+        let response = self.build_request(&url, &body, Method::POST).await?;
+
+        if !response.status().is_success() {
+            let text = response.text().await?;
+            return Err(anyhow::anyhow!(text));
+        }
+
+        response
+            .json::<TracksResponse>()
+            .await
+            .map_err(|e| e.into())
+    }
 }
 
 #[cfg(test)]
